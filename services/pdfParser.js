@@ -1,15 +1,13 @@
 /**
  * PDF'i parse edip sayfa bazlı metin ve temel bölüm başlığı tahminlerini döndürür.
- * unpdf kullanır - serverless/Node.js ortamı için tasarlanmış, DOMMatrix/test dosyası gerektirmez.
+ * pdf-parse/lib/pdf-parse.js doğrudan kullanılır - index.js debug bloğu (test dosyası okuma) atlanır.
  */
+const pdfParse = require("pdf-parse/lib/pdf-parse.js");
+
 async function parsePdf(buffer) {
-  const { extractText, getDocumentProxy } = await import("unpdf");
+  const data = await pdfParse(buffer);
 
-  const uint8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
-  const pdf = await getDocumentProxy(uint8);
-  const { totalPages, text } = await extractText(pdf, { mergePages: false });
-
-  const textByPage = Array.isArray(text) && text.length > 0 ? text.map((t) => t || "") : [""];
+  const textByPage = splitTextByPages(data.text);
   const sections = detectSections(textByPage);
   const references = extractReferencesSection(textByPage, sections);
 
@@ -17,13 +15,13 @@ async function parsePdf(buffer) {
     pageCount: textByPage.length,
     pages: textByPage.map((content, index) => ({
       pageNumber: index + 1,
-      text: typeof content === "string" ? content : ""
+      text: content
     })),
     sections,
     references,
     meta: {
-      info: {},
-      numPages: totalPages || textByPage.length
+      info: data.info || {},
+      numPages: data.numpages || textByPage.length
     }
   };
 }
