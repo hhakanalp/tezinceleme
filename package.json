@@ -1,0 +1,24 @@
+{
+  "name": "tez-kilavuzu-kontrol",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "concurrently \"vite\" \"node server/check-thesis-api.js\"",
+    "build": "vite build",
+    "preview": "concurrently \"vite preview\" \"node server/check-thesis-api.js\"",
+    "lint": "echo \"no linter configured\""
+  },
+  "dependencies": {
+    "@vitejs/plugin-react-swc": "^4.2.3",
+    "pdf-parse": "^2.4.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.2",
+    "concurrently": "^9.2.1",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.0"
+  }
+}
