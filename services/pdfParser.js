@@ -1,15 +1,15 @@
-const pdfParse = require("pdf-parse");
-
 /**
  * PDF'i parse edip sayfa bazlı metin ve temel bölüm başlığı tahminlerini döndürür.
- * Bu, metin tabanlı yaklaşık bir analizdir; biçimsel detaylar (font, tam kenar boşlukları)
- * yalnızca heuristik seviyede tahmin edilebilir.
- * pdf-parse v1 kullanır - Node.js ortamında DOMMatrix vb. tarayıcı API'si gerektirmez.
+ * unpdf kullanır - serverless/Node.js ortamı için tasarlanmış, DOMMatrix/test dosyası gerektirmez.
  */
 async function parsePdf(buffer) {
-  const data = await pdfParse(buffer);
+  const { extractText, getDocumentProxy } = await import("unpdf");
 
-  const textByPage = splitTextByPages(data.text);
+  const uint8 = buffer instanceof Uint8Array ? buffer : new Uint8Array(buffer);
+  const pdf = await getDocumentProxy(uint8);
+  const { totalPages, text } = await extractText(pdf, { mergePages: false });
+
+  const textByPage = Array.isArray(text) && text.length > 0 ? text.map((t) => t || "") : [""];
   const sections = detectSections(textByPage);
   const references = extractReferencesSection(textByPage, sections);
 
@@ -17,13 +17,13 @@ async function parsePdf(buffer) {
     pageCount: textByPage.length,
     pages: textByPage.map((content, index) => ({
       pageNumber: index + 1,
-      text: content
+      text: typeof content === "string" ? content : ""
     })),
     sections,
     references,
     meta: {
-      info: data.info || {},
-      numPages: data.numpages || textByPage.length
+      info: {},
+      numPages: totalPages || textByPage.length
     }
   };
 }
