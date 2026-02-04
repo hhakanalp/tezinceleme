@@ -58,9 +58,14 @@ export const App: React.FC = () => {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(
-          `Sunucu hatası (${response.status}): ${text || "Bilinmeyen hata"}`
-        );
+        let errMsg = text || "Bilinmeyen hata";
+        try {
+          const json = JSON.parse(text) as { error?: string };
+          if (json.error) errMsg = json.error;
+        } catch {
+          /* JSON değilse ham metni kullan */
+        }
+        throw new Error(`Sunucu hatası (${response.status}): ${errMsg}`);
       }
 
       const data = (await response.json()) as AnalysisReport;
